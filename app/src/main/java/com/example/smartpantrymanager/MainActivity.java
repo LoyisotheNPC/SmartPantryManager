@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -54,6 +55,15 @@ public class MainActivity extends AppCompatActivity {
         Button addButton = new Button(this);
         addButton.setText("+ Add Ingredient");
         root.addView(addButton);
+        Button recipesButton = new Button(this);
+        recipesButton.setText("Suggested Recipes");
+
+        recipesButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, RecipeActivity.class);
+            startActivity(intent);
+        });
+
+        root.addView(recipesButton);
 
         emptyMessage = new TextView(this);
         emptyMessage.setText("Your pantry is empty. Add your first ingredient!");

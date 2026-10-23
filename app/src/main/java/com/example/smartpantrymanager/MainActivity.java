@@ -74,6 +74,16 @@ public class MainActivity extends AppCompatActivity {
         });
         root.addView(allRecipesButton);
 
+        // New Settings button
+        Button settingsButton = new Button(this);
+        settingsButton.setText("Settings");
+        settingsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                    MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
+        root.addView(settingsButton);
+
         emptyMessage = new TextView(this);
         emptyMessage.setText(
                 "Your pantry is empty. Add your first ingredient!");
@@ -204,10 +214,12 @@ public class MainActivity extends AppCompatActivity {
                 double quantity = cursor.getDouble(
                         cursor.getColumnIndexOrThrow(
                                 DatabaseHelper.COL_QUANTITY));
-                String unit = cursor.getString(cursor.getColumnIndexOrThrow(
-                        DatabaseHelper.COL_UNIT));
-                String expiry = cursor.getString(cursor.getColumnIndexOrThrow(
-                        DatabaseHelper.COL_EXPIRY));
+                String unit = cursor.getString(
+                        cursor.getColumnIndexOrThrow(
+                                DatabaseHelper.COL_UNIT));
+                String expiry = cursor.getString(
+                        cursor.getColumnIndexOrThrow(
+                                DatabaseHelper.COL_EXPIRY));
 
                 LinearLayout card = new LinearLayout(this);
                 card.setOrientation(LinearLayout.VERTICAL);

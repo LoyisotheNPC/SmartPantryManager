@@ -31,6 +31,9 @@
         <activity
             android:name=".AllRecipesActivity"
             android:exported="false" />
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

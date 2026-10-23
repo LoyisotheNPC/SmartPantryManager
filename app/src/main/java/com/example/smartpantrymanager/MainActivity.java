@@ -2,7 +2,10 @@
 package com.example.smartpantrymanager;
 
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -11,11 +14,8 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.database.Cursor;
 
 import java.util.Locale;
 
@@ -55,18 +55,28 @@ public class MainActivity extends AppCompatActivity {
         Button addButton = new Button(this);
         addButton.setText("+ Add Ingredient");
         root.addView(addButton);
+
         Button recipesButton = new Button(this);
         recipesButton.setText("Suggested Recipes");
-
         recipesButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, RecipeActivity.class);
+            Intent intent = new Intent(
+                    MainActivity.this, RecipeActivity.class);
             startActivity(intent);
         });
-
         root.addView(recipesButton);
 
+        Button allRecipesButton = new Button(this);
+        allRecipesButton.setText("All Recipes");
+        allRecipesButton.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                    MainActivity.this, AllRecipesActivity.class);
+            startActivity(intent);
+        });
+        root.addView(allRecipesButton);
+
         emptyMessage = new TextView(this);
-        emptyMessage.setText("Your pantry is empty. Add your first ingredient!");
+        emptyMessage.setText(
+                "Your pantry is empty. Add your first ingredient!");
         emptyMessage.setTextSize(16);
         emptyMessage.setTextColor(0xFF666666);
         emptyMessage.setGravity(Gravity.CENTER);
@@ -100,8 +110,8 @@ public class MainActivity extends AppCompatActivity {
         EditText quantityInput = new EditText(this);
         quantityInput.setHint("Quantity (e.g. 2)");
         quantityInput.setInputType(
-                android.text.InputType.TYPE_CLASS_NUMBER
-                        | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                InputType.TYPE_CLASS_NUMBER
+                        | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         form.addView(quantityInput);
 
         EditText unitInput = new EditText(this);
@@ -166,6 +176,15 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (databaseHelper != null && ingredientList != null) {
+            refreshIngredients();
+        }
+    }
+
     private void refreshIngredients() {
         ingredientList.removeAllViews();
 
@@ -178,21 +197,17 @@ public class MainActivity extends AppCompatActivity {
             emptyMessage.setVisibility(TextView.GONE);
 
             while (cursor.moveToNext()) {
-                int id = cursor.getInt(
-                        cursor.getColumnIndexOrThrow(
-                                DatabaseHelper.COL_ID));
-                String name = cursor.getString(
-                        cursor.getColumnIndexOrThrow(
-                                DatabaseHelper.COL_NAME));
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow(
+                        DatabaseHelper.COL_ID));
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(
+                        DatabaseHelper.COL_NAME));
                 double quantity = cursor.getDouble(
                         cursor.getColumnIndexOrThrow(
                                 DatabaseHelper.COL_QUANTITY));
-                String unit = cursor.getString(
-                        cursor.getColumnIndexOrThrow(
-                                DatabaseHelper.COL_UNIT));
-                String expiry = cursor.getString(
-                        cursor.getColumnIndexOrThrow(
-                                DatabaseHelper.COL_EXPIRY));
+                String unit = cursor.getString(cursor.getColumnIndexOrThrow(
+                        DatabaseHelper.COL_UNIT));
+                String expiry = cursor.getString(cursor.getColumnIndexOrThrow(
+                        DatabaseHelper.COL_EXPIRY));
 
                 LinearLayout card = new LinearLayout(this);
                 card.setOrientation(LinearLayout.VERTICAL);
@@ -206,14 +221,17 @@ public class MainActivity extends AppCompatActivity {
                 cardParams.setMargins(0, 8, 0, 8);
                 card.setLayoutParams(cardParams);
 
+                String quantityDisplay =
+                        quantity == Math.floor(quantity)
+                                ? String.valueOf((long) quantity)
+                                : String.valueOf(quantity);
+
                 TextView ingredientText = new TextView(this);
                 ingredientText.setText(String.format(
                         Locale.getDefault(),
                         "%s\nQuantity: %s %s\nExpiry: %s",
                         name,
-                        quantity == Math.floor(quantity)
-                                ? String.valueOf((long) quantity)
-                                : String.valueOf(quantity),
+                        quantityDisplay,
                         unit,
                         expiry == null || expiry.isEmpty()
                                 ? "Not specified" : expiry));
@@ -221,14 +239,11 @@ public class MainActivity extends AppCompatActivity {
                 ingredientText.setTextColor(0xFF222222);
                 card.addView(ingredientText);
 
-
                 Button editButton = new Button(this);
                 editButton.setText("Edit");
-
-                editButton.setOnClickListener(v -> {
-                    showEditIngredientDialog(id, name, quantity, unit, expiry);
-                });
-
+                editButton.setOnClickListener(v ->
+                        showEditIngredientDialog(
+                                id, name, quantity, unit, expiry));
                 card.addView(editButton);
 
                 Button deleteButton = new Button(this);
@@ -236,7 +251,8 @@ public class MainActivity extends AppCompatActivity {
                 deleteButton.setOnClickListener(v ->
                         new AlertDialog.Builder(this)
                                 .setTitle("Delete ingredient?")
-                                .setMessage("Remove " + name + " from your pantry?")
+                                .setMessage("Remove " + name
+                                        + " from your pantry?")
                                 .setNegativeButton("Cancel", null)
                                 .setPositiveButton("Delete", (d, w) -> {
                                     databaseHelper.deleteIngredient(id);
@@ -269,8 +285,8 @@ public class MainActivity extends AppCompatActivity {
         EditText quantityInput = new EditText(this);
         quantityInput.setHint("Quantity");
         quantityInput.setInputType(
-                android.text.InputType.TYPE_CLASS_NUMBER
-                        | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                InputType.TYPE_CLASS_NUMBER
+                        | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         quantityInput.setText(String.valueOf(currentQuantity));
         layout.addView(quantityInput);
 
@@ -281,8 +297,7 @@ public class MainActivity extends AppCompatActivity {
 
         EditText expiryInput = new EditText(this);
         expiryInput.setHint("Expiry date (optional)");
-        expiryInput.setText(
-                currentExpiry == null ? "" : currentExpiry);
+        expiryInput.setText(currentExpiry == null ? "" : currentExpiry);
         layout.addView(expiryInput);
 
         new AlertDialog.Builder(this)
@@ -308,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         double quantity = Double.parseDouble(quantityText);
 
-                        if (quantity <= 0) {
+                        if (!Double.isFinite(quantity) || quantity <= 0) {
                             Toast.makeText(this,
                                     "Quantity must be greater than zero.",
                                     Toast.LENGTH_SHORT).show();
@@ -333,5 +348,4 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .show();
     }
-
 }

@@ -211,6 +211,16 @@ public class MainActivity extends AppCompatActivity {
                 ingredientText.setTextColor(0xFF222222);
                 card.addView(ingredientText);
 
+
+                Button editButton = new Button(this);
+                editButton.setText("Edit");
+
+                editButton.setOnClickListener(v -> {
+                    showEditIngredientDialog(id, name, quantity, unit, expiry);
+                });
+
+                card.addView(editButton);
+
                 Button deleteButton = new Button(this);
                 deleteButton.setText("Delete");
                 deleteButton.setOnClickListener(v ->
@@ -232,4 +242,86 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    private void showEditIngredientDialog(
+            int id, String currentName, double currentQuantity,
+            String currentUnit, String currentExpiry) {
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(40, 20, 40, 10);
+
+        EditText nameInput = new EditText(this);
+        nameInput.setHint("Ingredient name");
+        nameInput.setText(currentName);
+        layout.addView(nameInput);
+
+        EditText quantityInput = new EditText(this);
+        quantityInput.setHint("Quantity");
+        quantityInput.setInputType(
+                android.text.InputType.TYPE_CLASS_NUMBER
+                        | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        quantityInput.setText(String.valueOf(currentQuantity));
+        layout.addView(quantityInput);
+
+        EditText unitInput = new EditText(this);
+        unitInput.setHint("Unit (e.g. kg, g, pieces)");
+        unitInput.setText(currentUnit);
+        layout.addView(unitInput);
+
+        EditText expiryInput = new EditText(this);
+        expiryInput.setHint("Expiry date (optional)");
+        expiryInput.setText(
+                currentExpiry == null ? "" : currentExpiry);
+        layout.addView(expiryInput);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Edit ingredient")
+                .setView(layout)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String name = nameInput.getText().toString().trim();
+                    String quantityText =
+                            quantityInput.getText().toString().trim();
+                    String unit = unitInput.getText().toString().trim();
+                    String expiry =
+                            expiryInput.getText().toString().trim();
+
+                    if (name.isEmpty() || quantityText.isEmpty()
+                            || unit.isEmpty()) {
+                        Toast.makeText(this,
+                                "Please enter a name, quantity and unit.",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    try {
+                        double quantity = Double.parseDouble(quantityText);
+
+                        if (quantity <= 0) {
+                            Toast.makeText(this,
+                                    "Quantity must be greater than zero.",
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        databaseHelper.updateIngredient(
+                                id, name, quantity, unit,
+                                expiry.isEmpty() ? null : expiry);
+
+                        refreshIngredients();
+
+                        Toast.makeText(this,
+                                "Ingredient updated.",
+                                Toast.LENGTH_SHORT).show();
+
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(this,
+                                "Please enter a valid quantity.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
+    }
+
 }
